@@ -27,10 +27,10 @@ func main() {
 	prefix = uuid.NewV5(uuid.NewV4(), prefix).String()
 	portAddrPtr := flag.String("port", "10000", "http port")
 	hostAddrPtr := flag.String("host", ":10001", "tcp addr")
-	usersPtr := flag.Int("users", 5000, "user count")
+	usersPtr := flag.Int("users", 1000, "user count")
 	topicsPtr := flag.Int("topics", 100, "topic count")
 	perPtr := flag.Int("per", 20, "topics per user")
-	durationPtr := flag.Int64("duration", 20, "duration in second")
+	durationPtr := flag.Int64("duration", 30, "duration in second")
 	flag.Parse()
 	go func() {
 		for i := 0; i < *usersPtr; i++ {
