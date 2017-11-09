@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"math/rand"
 	"net"
 	"net/http"
 	"time"
@@ -28,32 +27,26 @@ func main() {
 	prefix = uuid.NewV5(uuid.NewV4(), prefix).String()
 	portAddrPtr := flag.String("port", "10000", "http port")
 	hostAddrPtr := flag.String("host", ":10001", "tcp addr")
-	usersPtr := flag.Int("users", 1000, "user count")
+	usersPtr := flag.Int("users", 5000, "user count")
 	topicsPtr := flag.Int("topics", 100, "topic count")
 	perPtr := flag.Int("per", 20, "topics per user")
-	durationPtr := flag.Int64("duration", 10, "duration in second")
+	durationPtr := flag.Int64("duration", 20, "duration in second")
 	flag.Parse()
-	hostAddr := *hostAddrPtr
-	users := *usersPtr
-	topics := *topicsPtr
-	per := *perPtr
-	duration := *durationPtr
 	go func() {
-		for i := 0; i < users; i++ {
+		for i := 0; i < *usersPtr; i++ {
 			<-time.After(time.Millisecond * 10)
-			cli := NewClient(hostAddr, prefix+"|user:"+fmt.Sprintln(i), "robot")
+			cli := NewClient(*hostAddrPtr, prefix+"|user:"+fmt.Sprintln(i), "robot")
+			idx := i
 			go func() {
 				for {
-					for {
-						if per > cli.TopicCount() {
-							cli.Subscribe("room:" + fmt.Sprintln(rand.Intn(topics)))
-						} else {
-							break
-						}
+					slot := idx % (*topicsPtr / *perPtr)
+					start := (*perPtr) * slot
+					for i := start; i < start+*perPtr; i++ {
+						cli.Subscribe("room:" + fmt.Sprintln(i))
 					}
 					topicID := cli.RandomTopic()
 					cli.Publish(topicID, fmt.Sprintln(time.Now().Unix()))
-					<-time.After(time.Duration(int64(time.Second) * duration))
+					<-time.After(time.Duration(int64(time.Second) * *durationPtr))
 				}
 			}()
 			go func() {
