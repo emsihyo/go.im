@@ -1,0 +1,27 @@
+syntax = "proto3";
+package bi;
+option java_package = "com.emsihyo.bi";
+option java_outer_classname = "BI";
+option java_generic_services = true;  
+option java_generate_equals_and_hash = true;
+option objc_class_prefix = "BI";
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+// option (gogoproto.gostring_all) = true;
+// option (gogoproto.marshaler_all) = true;
+// option (gogoproto.unmarshaler_all) = true;
+option (gogoproto.goproto_stringer_all) = false;
+option (gogoproto.stringer_all) =  true;
+
+message Message {
+enum Type {
+    Emit          = 0;
+    Request       = 1;
+    Response      = 2;
+ }
+  Type        T = 1;
+  uint64      I = 2;
+  string      M = 3;
+  bytes       A = 4;
+}

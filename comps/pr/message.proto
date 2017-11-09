@@ -1,0 +1,116 @@
+syntax = "proto3";
+package pr;
+option java_package = "com.emsihyo.go.im";
+option java_outer_classname = "GOIM";
+option java_generic_services = true;  
+option java_generate_equals_and_hash = true;
+option objc_class_prefix = "GOIM";
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+// option (gogoproto.gostring_all) = true;
+// option (gogoproto.marshaler_all) = true;
+// option (gogoproto.unmarshaler_all) = true;
+option (gogoproto.goproto_stringer_all) = false;
+option (gogoproto.stringer_all) =  true;
+enum Err {
+    UserIDWrong = 0;
+    PasswordWrong = 1;
+    NotLogin = 2;
+}
+
+enum Type {
+    Ping        = 0;    
+    Login       = 1;
+    Logout      = 2;
+    Subscribe   = 3;
+    Unsubscribe = 4;
+    Send        = 5;    
+    Deliver     = 6;
+}
+
+message ReqLogin{
+    string UserID   = 1;
+    string Password = 2;
+    string Platform = 3;
+}
+
+message RespLogin{
+    int32  Code = 1;
+    string Desc = 2;
+}
+
+message ReqLogout{
+    
+}
+
+message RespLogout{
+    int32  Code = 1;
+    string Desc = 2;
+}
+
+message ReqSubscribe{
+    string TopicID = 1;
+    int64  MinSID = 2;
+    int64  MaxCount = 3;
+}
+
+message RespSubscribe{
+    int32  Code = 1;
+    string Desc = 2;
+    repeated Message histories = 3;
+}
+
+message ReqUnsubscribe{
+    string TopicID = 1;
+}
+
+message RespUnsubscribe{
+    int32  Code = 1;
+    string Desc = 2;
+}
+
+message EmitSend {
+    Message Message = 1;
+}
+
+message ReqDeliver {
+    Message Message = 1;   
+}
+
+message RespDeliver {
+    int32   Code    = 1;
+    string  Desc    = 2;
+    int64   SID     = 3;
+    int64   At      = 4;
+}
+
+message ReqPing{
+}
+
+message RespPing{
+}
+
+message Consumer {
+    string ID       = 1 [(gogoproto.jsontag) = "id,omitempty",(gogoproto.moretags) = "bson:\"id,omitempty\""];
+    string Name     = 2 [(gogoproto.jsontag) = "name,omitempty",(gogoproto.moretags) = "bson:\"name,omitempty\""];
+    string Avartar  = 3 [(gogoproto.jsontag) = "avartar,omitempty",(gogoproto.moretags) = "bson:\"avartar,omitempty\""];
+    int64  UpdateAt = 4 [(gogoproto.jsontag) = "update_at,omitempty",(gogoproto.moretags) = "bson:\"update_at,omitempty\""];
+}
+
+message Topic {
+    string ID       = 1 [(gogoproto.jsontag) = "id,omitempty",(gogoproto.moretags) = "bson:\"id,omitempty\""];
+    string Title    = 2 [(gogoproto.jsontag) = "title,omitempty",(gogoproto.moretags) = "bson:\"title,omitempty\""];
+    string Avartar  = 3 [(gogoproto.jsontag) = "avartar,omitempty",(gogoproto.moretags) = "bson:\"avartar,omitempty\""];
+    int64  UpdateAt = 4 [(gogoproto.jsontag) = "update_at,omitempty",(gogoproto.moretags) = "bson:\"update_at,omitempty\""];    
+    bool   Group    = 5 [(gogoproto.jsontag) = "group,omitempty",(gogoproto.moretags) = "bson:\"group,omitempty\""];  
+}
+
+message Message {
+    string   CID  = 1 [(gogoproto.jsontag) = "cid,omitempty",(gogoproto.moretags) = "bson:\"cid,omitempty\""];
+    int64    SID  = 2 [(gogoproto.jsontag) = "sid,omitempty",(gogoproto.moretags) = "bson:\"sid,omitempty\""];
+    Consumer From = 3 [(gogoproto.jsontag) = "from,omitempty",(gogoproto.moretags) = "bson:\"from,omitempty\""];
+    Topic    To   = 4 [(gogoproto.jsontag) = "to,omitempty",(gogoproto.moretags) = "bson:\"to,omitempty\""];
+    int64    At   = 5 [(gogoproto.jsontag) = "at,omitempty",(gogoproto.moretags) = "bson:\"at,omitempty\""];
+    string   Body = 6 [(gogoproto.jsontag) = "body,omitempty",(gogoproto.moretags) = "bson:\"content,omitempty\""];
+}

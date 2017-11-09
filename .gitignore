@@ -1,0 +1,5 @@
+.DS_Store
+client/debug
+client/client
+server/debug
+server/server
