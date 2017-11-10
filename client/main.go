@@ -54,12 +54,12 @@ func main() {
 					}
 				}()
 			}()
-			// go func() {
-			// 	for {
-			// 		cli.Ping()
-			// 		<-time.After(time.Second * 30)
-			// 	}
-			// }()
+			go func() {
+				for {
+					cli.Ping()
+					<-time.After(time.Second * 30)
+				}
+			}()
 		}
 	}()
 	log.Print(http.ListenAndServe(":"+*portAddrPtr, nil))
