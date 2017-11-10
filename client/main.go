@@ -28,7 +28,7 @@ func main() {
 	portAddrPtr := flag.String("port", "10000", "http port")
 	hostAddrPtr := flag.String("host", ":10001", "tcp addr")
 	usersPtr := flag.Int("users", 5000, "user count")
-	topicsPtr := flag.Int("topics", 1000, "topic count")
+	topicsPtr := flag.Int("topics", 250, "topic count")
 	perPtr := flag.Int("per", 20, "topics per user")
 	durationPtr := flag.Int64("duration", 30, "duration in second")
 	flag.Parse()
