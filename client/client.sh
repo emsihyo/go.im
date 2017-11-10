@@ -11,7 +11,6 @@ sudo tee /etc/docker/daemon.json <<-'EOF'
 EOF
 sudo systemctl daemon-reload
 sudo systemctl restart docker
-
 docker rm -rf go.im.client
 docker pull registry.cn-shenzhen.aliyuncs.com/emsihyo/go.im.client
 docker rmi $(docker images -f "dangling=true" -q)
