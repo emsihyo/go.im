@@ -36,16 +36,14 @@ func NewClient(addr string, id string, platform string) *Client {
 	b := bi.NewBI()
 	cli := Client{b: b, addr: addr, id: id, platform: platform, topics: map[string]string{}, sids: map[string]int64{}}
 	cli.b.On(pr.Type_Send.String(), func(sess bi.Session, req *pr.EmitSend) {
-		go func() {
-			cli.mut.Lock()
-			defer cli.mut.Unlock()
-			sid := req.GetMessage().GetSID()
-			id := req.GetMessage().GetTo().GetID()
-			if sid > cli.sids[id] {
-				cli.sids[id] = sid
-				logrus.Debug("[REV]", req.GetMessage().GetTo().GetID(), req.GetMessage().GetFrom().GetID(), req.GetMessage().GetBody())
-			}
-		}()
+		// cli.mut.Lock()
+		// defer cli.mut.Unlock()
+		// sid := req.GetMessage().GetSID()
+		// id := req.GetMessage().GetTo().GetID()
+		// if sid > cli.sids[id] {
+		// 	cli.sids[id] = sid
+		// 	logrus.Debug("[REV]", req.GetMessage().GetTo().GetID(), req.GetMessage().GetFrom().GetID(), req.GetMessage().GetBody())
+		// }
 	})
 	return &cli
 }
@@ -54,6 +52,7 @@ func (cli *Client) preproccess() {
 	for {
 		if false == cli.isConnected {
 			if err := cli.connect(); nil != err {
+				<-time.After(time.Second * 3)
 				continue
 			} else {
 				cli.isConnected = true
@@ -61,13 +60,14 @@ func (cli *Client) preproccess() {
 		}
 		if false == cli.isLogged {
 			if err := cli.login(); nil != err {
+				<-time.After(time.Second * 3)
 				continue
 			} else {
 				cli.isLogged = true
 				for _, topicID := range cli.topics {
 					if _, err := cli.subscribe(topicID); nil != err {
 						cli.reset()
-						goto label
+						break
 					}
 				}
 				return
@@ -75,7 +75,6 @@ func (cli *Client) preproccess() {
 		} else {
 			return
 		}
-	label:
 	}
 }
 
@@ -109,6 +108,7 @@ func (cli *Client) login() error {
 		logrus.Debug("[LOGIN]", cli.id, err)
 		return err
 	}
+	logrus.Debug("[LOGIN]", cli.id)
 	return nil
 }
 
