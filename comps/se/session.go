@@ -2,6 +2,7 @@ package se
 
 import (
 	"sync"
+	"time"
 
 	"github.com/emsihyo/go.im/comps/bi"
 	"github.com/emsihyo/go.im/comps/pr"
@@ -19,8 +20,8 @@ type Session struct {
 }
 
 //NewSession NewSession
-func NewSession(conn bi.Conn, protocol bi.Protocol) *Session {
-	return &Session{impl: bi.NewSessionImpl(conn, protocol), topicIDs: map[string]string{}}
+func NewSession(conn bi.Conn, protocol bi.Protocol, timeout time.Duration) *Session {
+	return &Session{impl: bi.NewSessionImpl(conn, protocol, timeout), topicIDs: map[string]string{}}
 }
 
 //GetSessionImpl GetSessionImpl

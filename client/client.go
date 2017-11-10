@@ -90,8 +90,8 @@ func (cli *Client) connect() error {
 		logrus.Debug("[CONNECT]", cli.id, err)
 		return err
 	}
-	conn := bi.NewTCPConn(c, time.Hour)
-	sess := se.NewSession(conn, &bi.ProtobufProtocol{})
+	conn := bi.NewTCPConn(c)
+	sess := se.NewSession(conn, &bi.ProtobufProtocol{}, time.Hour)
 	cli.sess = sess
 	go cli.b.Handle(sess)
 	return nil

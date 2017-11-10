@@ -17,21 +17,25 @@ const (
 
 //SessionImpl SessionImpl
 type SessionImpl struct {
-	id             string
-	b              *BI
-	extension      interface{}
-	protocol       Protocol
-	conn           Conn
-	qa             *QA
-	isClosed       bool
-	closedErr      error
-	closedMut      sync.RWMutex
-	didDisconnects []chan error
+	id                string
+	b                 *BI
+	extension         interface{}
+	protocol          Protocol
+	conn              Conn
+	qa                *QA
+	isClosed          bool
+	closedErr         error
+	closedMut         sync.Mutex
+	didReceiveMessage chan *Message
+	didReceiveError   chan error
+	didDisconnects    []chan error
+	timeout           time.Duration
+	timer             *time.Timer
 }
 
 //NewSessionImpl NewSessionImpl
-func NewSessionImpl(conn Conn, protocol Protocol) *SessionImpl {
-	return &SessionImpl{id: uuid.NewV3(uuid.NewV4(), conn.RemoteAddr()).String(), conn: conn, protocol: protocol, qa: newQA(), didDisconnects: []chan error{}}
+func NewSessionImpl(conn Conn, protocol Protocol, timeout time.Duration) *SessionImpl {
+	return &SessionImpl{id: uuid.NewV3(uuid.NewV4(), conn.RemoteAddr()).String(), conn: conn, protocol: protocol, qa: newQA(), didDisconnects: []chan error{}, didReceiveMessage: make(chan *Message), didReceiveError: make(chan error), timeout: timeout, timer: time.NewTimer(timeout)}
 }
 
 //GetID GetID
@@ -110,43 +114,64 @@ func (sess *SessionImpl) SendMarshalledData(marshalledData []byte) {
 func (sess *SessionImpl) handle(b *BI, extension interface{}) {
 	sess.b = b
 	sess.extension = extension
-	var err error
-	var data []byte
 	sess.b.onEmit(sess.extension, Connection, sess.protocol, nil)
-	for {
-		if data, err = sess.conn.Read(); nil != err {
-			break
-		}
-		if nil == data {
-			continue
-		}
-		m := Message{}
-		if err = sess.protocol.Unmarshal(data, &m); nil != err {
-			break
-		}
-		switch m.T {
-		case Message_Emit:
-			sess.b.onEmit(sess.extension, m.M, sess.protocol, m.A)
-		case Message_Request:
-			resp, _ := sess.b.onRequest(sess.extension, m.M, sess.protocol, m.A)
-			m.T = Message_Response
-			m.A = resp
-			m.M = ""
-			sess.sendMessage(&m)
-		case Message_Response:
-			q := sess.qa.getQ(m.I)
-			if nil != q {
-				q <- m.A
+	go func() {
+		var err error
+		var data []byte
+		for {
+			if data, err = sess.conn.Read(); nil != err {
+				sess.didReceiveError <- err
+				break
 			}
+			if nil == data {
+				continue
+			}
+			m := Message{}
+			err = sess.protocol.Unmarshal(data, &m)
+			if nil != err {
+				sess.didReceiveError <- err
+				break
+			} else {
+				sess.didReceiveMessage <- &m
+			}
+		}
+	}()
+	var err error
+	var ignore bool
+loop:
+	for {
+		sess.timer.Reset(sess.timeout)
+		select {
+		case <-sess.timer.C:
+			ignore = true
+			sess.conn.Close()
+		case m := <-sess.didReceiveMessage:
+			if true != ignore {
+				switch m.T {
+				case Message_Emit:
+					sess.b.onEmit(sess.extension, m.M, sess.protocol, m.A)
+				case Message_Request:
+					resp, _ := sess.b.onRequest(sess.extension, m.M, sess.protocol, m.A)
+					m.T = Message_Response
+					m.A = resp
+					m.M = ""
+					sess.sendMessage(m)
+				case Message_Response:
+					q := sess.qa.getQ(m.I)
+					if nil != q {
+						q <- m.A
+					}
+				}
+			}
+		case err = <-sess.didReceiveError:
+			break loop
 		}
 	}
 	sess.closedMut.Lock()
 	defer sess.closedMut.Unlock()
-	sess.conn.Close()
+	sess.closedErr = err
 	sess.isClosed = true
-	if nil != sess.closedErr {
-		err = sess.closedErr
-	}
+	sess.conn.Close()
 	for _, didDisconnect := range sess.didDisconnects {
 		didDisconnect <- err
 	}

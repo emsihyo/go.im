@@ -69,7 +69,7 @@ func (serv *Server) init() {
 		}
 		sess.SetConsumer(&pr.Consumer{ID: req.GetUserID()})
 		sess.SetLogged(true)
-		return &pr.RespLogin{Code: 0, Desc: ""}
+		return &pr.RespLogin{Code: 0, Desc: "成功"}
 	})
 
 	serv.bi.On(pr.Type_Logout.String(), func(sess *se.Session, req *pr.ReqLogout) *pr.RespLogout {
