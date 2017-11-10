@@ -38,12 +38,12 @@ func main() {
 			cli := NewClient(*hostAddrPtr, prefix+"|user:"+fmt.Sprintln(i), "robot")
 			idx := i
 			go func() {
+				slot := idx % (*topicsPtr / *perPtr)
+				start := (*perPtr) * slot
+				for i := start; i < start+*perPtr; i++ {
+					cli.Subscribe("room:" + fmt.Sprintln(i))
+				}
 				for {
-					slot := idx % (*topicsPtr / *perPtr)
-					start := (*perPtr) * slot
-					for i := start; i < start+*perPtr; i++ {
-						cli.Subscribe("room:" + fmt.Sprintln(i))
-					}
 					topicID := cli.RandomTopic()
 					cli.Publish(topicID, fmt.Sprintln(time.Now().Unix()))
 					<-time.After(time.Duration(int64(time.Second) * *durationPtr))

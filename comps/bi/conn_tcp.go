@@ -2,28 +2,17 @@ package bi
 
 import (
 	"encoding/binary"
-	"errors"
 	"net"
-	"time"
 )
-
-type tcpReceivedRes struct {
-	data []byte
-	err  error
-}
 
 //TCPConn TCPConn
 type TCPConn struct {
-	conn       *net.TCPConn
-	didReceive chan *tcpReceivedRes
-	timeout    time.Duration
-	t          *time.Timer
+	conn *net.TCPConn
 }
 
 //NewTCPConn NewTCPConn
-func NewTCPConn(conn *net.TCPConn, timeout time.Duration) *TCPConn {
-	c := TCPConn{conn: conn, timeout: timeout, t: time.NewTimer(timeout), didReceive: make(chan *tcpReceivedRes)}
-	go c.handle()
+func NewTCPConn(conn *net.TCPConn) *TCPConn {
+	c := TCPConn{conn: conn}
 	return &c
 }
 
@@ -39,35 +28,19 @@ func (conn *TCPConn) RemoteAddr() string {
 
 //Read Read
 func (conn *TCPConn) Read() ([]byte, error) {
-	conn.t.Reset(conn.timeout)
-	select {
-	case <-conn.t.C:
-		conn.conn.Close()
-		return nil, errors.New("tcp conn timeout")
-	case res := <-conn.didReceive:
-		return res.data, res.err
-	}
-}
-
-func (conn *TCPConn) handle() {
 	head := make([]byte, 4)
-	for {
-		if err := conn.read2(head); nil != err {
-			conn.didReceive <- &tcpReceivedRes{nil, err}
-			return
-		}
-		bodySize := binary.BigEndian.Uint32(head)
-		if 0 == bodySize {
-			conn.didReceive <- &tcpReceivedRes{nil, nil}
-			continue
-		}
-		data := make([]byte, bodySize)
-		if err := conn.read2(data); nil != err {
-			conn.didReceive <- &tcpReceivedRes{nil, err}
-			return
-		}
-		conn.didReceive <- &tcpReceivedRes{data, nil}
+	if err := conn.read2(head); nil != err {
+		return nil, err
 	}
+	bodySize := binary.BigEndian.Uint32(head)
+	if 0 == bodySize {
+		return nil, nil
+	}
+	data := make([]byte, bodySize)
+	if err := conn.read2(data); nil != err {
+		return nil, err
+	}
+	return data, nil
 }
 
 func (conn *TCPConn) read2(data []byte) error {
