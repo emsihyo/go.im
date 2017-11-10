@@ -17,25 +17,26 @@ const (
 
 //SessionImpl SessionImpl
 type SessionImpl struct {
-	id                string
-	b                 *BI
-	extension         interface{}
-	protocol          Protocol
-	conn              Conn
-	qa                *QA
-	isClosed          bool
-	closedErr         error
-	closedMut         sync.Mutex
-	didReceiveMessage chan *Message
-	didReceiveError   chan error
-	didDisconnects    []chan error
-	timeout           time.Duration
-	timer             *time.Timer
+	id                 string
+	b                  *BI
+	extension          interface{}
+	protocol           Protocol
+	conn               Conn
+	qa                 *QA
+	isClosed           bool
+	closedErr          error
+	closedMut          sync.Mutex
+	sendMarshalledData chan []byte
+	didReceiveMessage  chan *Message
+	didReceiveError    chan error
+	didDisconnects     []chan error
+	timeout            time.Duration
+	timer              *time.Timer
 }
 
 //NewSessionImpl NewSessionImpl
 func NewSessionImpl(conn Conn, protocol Protocol, timeout time.Duration) *SessionImpl {
-	return &SessionImpl{id: uuid.NewV3(uuid.NewV4(), conn.RemoteAddr()).String(), conn: conn, protocol: protocol, qa: newQA(), didDisconnects: []chan error{}, didReceiveMessage: make(chan *Message), didReceiveError: make(chan error), timeout: timeout, timer: time.NewTimer(timeout)}
+	return &SessionImpl{id: uuid.NewV3(uuid.NewV4(), conn.RemoteAddr()).String(), conn: conn, protocol: protocol, qa: newQA(), didDisconnects: []chan error{}, didReceiveMessage: make(chan *Message), didReceiveError: make(chan error), sendMarshalledData: make(chan []byte, 1024), timeout: timeout, timer: time.NewTimer(timeout)}
 }
 
 //GetID GetID
@@ -108,13 +109,26 @@ func (sess *SessionImpl) Request(method string, args interface{}, resp interface
 
 //SendMarshalledData SendMarshalledData
 func (sess *SessionImpl) SendMarshalledData(marshalledData []byte) {
-	sess.conn.Write(marshalledData)
+	sess.sendMarshalledData <- marshalledData
 }
 
 func (sess *SessionImpl) handle(b *BI, extension interface{}) {
 	sess.b = b
 	sess.extension = extension
 	sess.b.onEmit(sess.extension, Connection, sess.protocol, nil)
+	waitForDisconnection := sess.waitForDisconnection()
+	go func() {
+	loop1:
+		for {
+			select {
+			case <-waitForDisconnection:
+				break loop1
+			case data := <-sess.sendMarshalledData:
+				sess.conn.Write(data)
+			}
+
+		}
+	}()
 	go func() {
 		var err error
 		var data []byte
@@ -138,7 +152,7 @@ func (sess *SessionImpl) handle(b *BI, extension interface{}) {
 	}()
 	var err error
 	var ignore bool
-loop:
+loop2:
 	for {
 		sess.timer.Reset(sess.timeout)
 		select {
@@ -164,7 +178,7 @@ loop:
 				}
 			}
 		case err = <-sess.didReceiveError:
-			break loop
+			break loop2
 		}
 	}
 	sess.closedMut.Lock()
@@ -183,7 +197,7 @@ func (sess *SessionImpl) sendMessage(m *Message) {
 	if nil != err {
 		return
 	}
-	sess.conn.Write(marshalledData)
+	sess.sendMarshalledData <- marshalledData
 }
 
 func (sess *SessionImpl) waitForDisconnection() chan error {

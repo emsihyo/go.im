@@ -35,7 +35,7 @@ func main() {
 	monitor := mo.NewMonitor(serv)
 	for {
 		snap := monitor.Monitor(time.Second * 5)
-		log.Printf("\n\nCPU:%.2f%%\nMEM:%.2f%%\nNET:in:%.2fMB/s out:%.2fMB/s\nTHREAD:%d\nGO:%d\nCONN:%d\nTOPIC:%d\nCONSUMER:maximum:%d total:%d\nMSG_IN:avg:%d total:%d\nMSG_OUT:avg:%d total:%d\n\n", snap.CPUPercent, snap.MemPercent, float64(snap.AverageNetIn)/1024.0/1024.0, float64(snap.AverageMessageOut)/1024.0/1024.0, snap.Thread, snap.Goroutine, snap.TotalConn, snap.TotalTopic, snap.MaxConsumer, snap.TotalConsumer, snap.AverageMessageIn, snap.TotalMessageIn, snap.AverageMessageOut, snap.TotalMessageOut)
+		log.Printf("\n\nCPU:%.2f%%\nMEM:%.2f%%\nNET:in:%.2fMB/s out:%.2fMB/s\nTHREAD:%d\nGO:%d\nCONN:%d\nTOPIC:%d\nCONSUMER:maximum:%d total:%d\nMSG_IN:avg:%d total:%d\nMSG_OUT:avg:%d total:%d\n\n", snap.CPUPercent, snap.MemPercent, float64(snap.AverageNetIn)/1024.0/1024.0, float64(snap.AverageNetOut)/1024.0/1024.0, snap.Thread, snap.Goroutine, snap.TotalConn, snap.TotalTopic, snap.MaxConsumer, snap.TotalConsumer, snap.AverageMessageIn, snap.TotalMessageIn, snap.AverageMessageOut, snap.TotalMessageOut)
 	}
 }
 

@@ -70,7 +70,7 @@ func newSlot(broadcast func(topicID string, to map[string]*Consumer, from Sessio
 }
 
 func (s *slot) subscribe(topicID string, consumer *Consumer) {
-	s.slotMut.RLock()
+	// s.slotMut.RLock()
 	s.topicMut.Lock()
 	t, ok := s.topics[topicID]
 	if !ok {
@@ -79,7 +79,7 @@ func (s *slot) subscribe(topicID string, consumer *Consumer) {
 	}
 	s.topicMut.Unlock()
 	t.subscribe(consumer)
-	s.slotMut.RUnlock()
+	// s.slotMut.RUnlock()
 }
 
 func (s *slot) unsubscribe(topicID string, consumerID string) {
@@ -87,15 +87,16 @@ func (s *slot) unsubscribe(topicID string, consumerID string) {
 	t, ok := s.topics[topicID]
 	s.topicMut.RUnlock()
 	if ok {
-		if count := t.unsubscribe(consumerID); count <= 0 {
-			s.slotMut.Lock()
-			s.topicMut.Lock()
-			if 0 >= t.consumerCount() {
-				delete(s.topics, topicID)
-			}
-			s.topicMut.Unlock()
-			s.slotMut.Unlock()
-		}
+		t.unsubscribe(consumerID)
+		// if count := t.unsubscribe(consumerID); count <= 0 {
+		// 	s.slotMut.Lock()
+		// 	s.topicMut.Lock()
+		// 	if 0 >= t.consumerCount() {
+		// 		delete(s.topics, topicID)
+		// 	}
+		// 	s.topicMut.Unlock()
+		// 	s.slotMut.Unlock()
+		// }
 	}
 }
 

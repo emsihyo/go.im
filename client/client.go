@@ -42,7 +42,7 @@ func NewClient(addr string, id string, platform string) *Client {
 		// id := req.GetMessage().GetTo().GetID()
 		// if sid > cli.sids[id] {
 		// 	cli.sids[id] = sid
-		// 	logrus.Debug("[REV]", req.GetMessage().GetTo().GetID(), req.GetMessage().GetFrom().GetID(), req.GetMessage().GetBody())
+		logrus.Debug("[REV]", req.GetMessage().GetTo().GetID(), req.GetMessage().GetFrom().GetID(), req.GetMessage().GetBody())
 		// }
 	})
 	return &cli
