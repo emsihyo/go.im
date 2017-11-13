@@ -6,6 +6,8 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
+	"runtime/pprof"
 
 	_ "net/http/pprof"
 
@@ -21,6 +23,17 @@ import (
 
 func main() {
 	log.SetFlags(log.Lshortfile | log.LstdFlags)
+	f, err := os.OpenFile("./cpu.prof", os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	pprof.StartCPUProfile(f)
+	go func() {
+		<-time.After(time.Minute * 5)
+		pprof.StopCPUProfile()
+		f.Close()
+	}()
+
 	// f, _ := os.OpenFile("server.log", os.O_CREATE|os.O_WRONLY, 0666)
 	// log.SetOutput(f)
 	// dbAddrPtr := flag.String("db", "127.0.0.1", "db addr")

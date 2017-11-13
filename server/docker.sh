@@ -11,7 +11,7 @@ sudo tee /etc/docker/daemon.json <<-'EOF'
 EOF
 sudo systemctl daemon-reload
 sudo systemctl restart docker
-docker rm -rf go.im.server
+docker rm -f go.im.server
 docker pull registry.cn-shenzhen.aliyuncs.com/emsihyo/go.im.server
 docker rmi $(docker images -f "dangling=true" -q)
 docker run -d --name go.im.server -p 10001:10001 -p 10002:10002 registry.cn-shenzhen.aliyuncs.com/emsihyo/go.im.server
