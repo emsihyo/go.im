@@ -37,7 +37,7 @@ type SessionImpl struct {
 
 //NewSessionImpl NewSessionImpl
 func NewSessionImpl(conn Conn, protocol Protocol, timeout time.Duration) *SessionImpl {
-	return &SessionImpl{id: uuid.NewV3(uuid.NewV4(), conn.RemoteAddr()).String(), conn: conn, protocol: protocol, qa: newQA(), didDisconnects: []chan error{}, didReceiveMessage: make(chan *Message, math.MaxInt32), didReceiveError: make(chan error), sendMarshalledData: make(chan []byte, math.MaxInt32), timeout: timeout, timer: time.NewTimer(timeout)}
+	return &SessionImpl{id: uuid.NewV3(uuid.NewV4(), conn.RemoteAddr()).String(), conn: conn, protocol: protocol, qa: newQA(), didDisconnects: []chan error{}, didReceiveMessage: make(chan *Message, math.MaxUint16), didReceiveError: make(chan error), sendMarshalledData: make(chan []byte, math.MaxUint16), timeout: timeout, timer: time.NewTimer(timeout)}
 }
 
 //GetID GetID
