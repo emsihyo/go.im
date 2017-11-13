@@ -57,7 +57,7 @@ func main() {
 			go func() {
 				for {
 					cli.Ping()
-					<-time.After(time.Second * 30)
+					<-time.After(time.Second * 60)
 				}
 			}()
 		}

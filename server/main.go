@@ -73,7 +73,7 @@ func handleTCP(serv *Server, port string) {
 				}
 				go func() {
 					conn := bi.NewTCPConn(c)
-					sess := se.NewSession(conn, &pp, time.Minute)
+					sess := se.NewSession(conn, &pp, time.Minute*2)
 					serv.Handle(sess)
 				}()
 			}
@@ -94,7 +94,7 @@ func handleHTTP(serv *Server, port string, namespace string) {
 		if c, err = up.Upgrade(w, r, nil); nil == err {
 			defer c.Close()
 			conn := bi.NewWebsocketConn(c)
-			sess := se.NewSession(conn, &pj, time.Minute)
+			sess := se.NewSession(conn, &pj, time.Minute*2)
 			serv.Handle(sess)
 		} else {
 			log.Print("[WEBSOCKET]:", "upgrade:", err)
