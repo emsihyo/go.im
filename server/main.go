@@ -33,9 +33,28 @@ func main() {
 	go handleTCP(serv, ":"+*tcpPortPtr)
 	go handleHTTP(serv, ":"+*httpPortPtr, *httpNamespacePtr)
 	monitor := mo.NewMonitor(serv)
+	at := time.Now().UnixNano()
 	for {
 		snap := monitor.Monitor(time.Second * 5)
-		log.Printf("\n\nCPU:%.2f%%\nMEM:%.2f%%\nNET:in:%.2fMB/s out:%.2fMB/s\nTHREAD:%d\nGO:%d\nCONN:%d\nTOPIC:%d\nCONSUMER:maximum:%d total:%d\nMSG_IN:avg:%d total:%d\nMSG_OUT:avg:%d total:%d\n\n", snap.CPUPercent, snap.MemPercent, float64(snap.AverageNetIn)/1024.0/1024.0, float64(snap.AverageNetOut)/1024.0/1024.0, snap.Thread, snap.Goroutine, snap.TotalConn, snap.TotalTopic, snap.MaxConsumer, snap.TotalConsumer, snap.AverageMessageIn, snap.TotalMessageIn, snap.AverageMessageOut, snap.TotalMessageOut)
+		duration := float64(time.Now().UnixNano()-at) / float64(time.Second)
+		log.Printf(`
+CPU:                 %.2f%%
+MEM:                 %.2f%%
+THREAD:              %d
+GOROUTINE:           %d
+NET_IN:              %.2fMB/s
+NET_OUT:             %.2fMB/s
+CONNECTION:          %d
+TOPIC:               %d
+CONSUMER_TOTAL:      %d
+CONSUMER_MAXIMUM:    %d
+MESSAGE_IN_TOTAL:    %d
+MESSAGE_IN_TOTAL_S:  %d
+MESSAGE_IN_S:        %d
+MESSAGE_OUT_TOTAL:   %d
+MESSAGE_OUT_TOTAL_S: %d
+MESSAGE_OUT_S:       %d
+			`, snap.CPUPercent, snap.MemPercent, snap.Thread, snap.Goroutine, float64(snap.AverageNetIn)/1024.0/1024.0, float64(snap.AverageNetOut)/1024.0/1024.0, snap.TotalConn, snap.TotalTopic, snap.TotalConsumer, snap.MaxConsumer, snap.TotalMessageIn, int64(float64(snap.TotalMessageIn)/duration), snap.AverageMessageIn, snap.TotalMessageOut, int64(float64(snap.TotalMessageOut)/duration), snap.AverageMessageOut)
 	}
 }
 
