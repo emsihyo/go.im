@@ -1,6 +1,7 @@
 package mo
 
 import (
+	"log"
 	"runtime"
 	"time"
 
@@ -74,13 +75,14 @@ func (mo *Monitor) Monitor(duration time.Duration) *Snapshot {
 
 func (mo *Monitor) cpuMo(duration time.Duration) (percent float64) {
 	v, err := cpu.Percent(duration, false)
-	if nil == err && len(v) > 0 {
-		return v[0]
+	if nil != err {
+		log.Println("cpuMo:", err)
+		return 0
 	}
-	return 0
-	// return v[0]
-	// <-time.After(duration)
-	// return 0
+	if len(v) == 0 {
+		return 0
+	}
+	return v[0]
 }
 
 func (mo *Monitor) consumerMo() (maximum uint64, total uint64) {
@@ -96,13 +98,23 @@ func (mo *Monitor) consumerMo() (maximum uint64, total uint64) {
 
 func (mo *Monitor) netMo() (in uint64, out uint64) {
 	c, err := n.IOCounters(false)
-	if nil == err && len(c) > 0 {
-		return c[0].BytesRecv, c[0].BytesSent
+	if nil != err {
+		log.Println("netMo:", err)
 	}
-	return 0, 0
+	if len(c) == 0 {
+		return 0, 0
+	}
+	return c[0].BytesRecv, c[0].BytesSent
 }
 
 func (mo *Monitor) memMo() (usedPercent float64) {
-	v, _ := mem.VirtualMemory()
+	v, err := mem.VirtualMemory()
+	if nil != err {
+		log.Println("memMo:", err)
+		return 0
+	}
+	if nil == v {
+		return 0
+	}
 	return v.UsedPercent
 }
