@@ -8,7 +8,6 @@ import (
 
 	"runtime/pprof"
 
-	"github.com/shirou/gopsutil/cpu"
 	n "github.com/shirou/gopsutil/net"
 )
 
@@ -73,8 +72,9 @@ func (mo *Monitor) Monitor(duration time.Duration) *Snapshot {
 }
 
 func (mo *Monitor) cpuMo(duration time.Duration) (percent float64) {
-	v, _ := cpu.Percent(duration, false)
-	return v[0]
+	// v, _ := cpu.Percent(duration, false)
+	// return v[0]
+	return 0
 }
 
 func (mo *Monitor) consumerMo() (maximum uint64, total uint64) {

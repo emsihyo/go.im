@@ -14,4 +14,4 @@ sudo systemctl restart docker
 docker rm -f go.im.client
 docker pull registry.cn-shenzhen.aliyuncs.com/emsihyo/go.im.client
 docker rmi $(docker images -f "dangling=true" -q)
-docker run -d --name go.im.client -p 10000:10000 registry.cn-shenzhen.aliyuncs.com/emsihyo/go.im.client  --port=10000 --host=172.18.240.38:10001 --users=10000 --topics=1000 --per=2 --duration=60
+docker run -d --name go.im.client -p 10000:10000 registry.cn-shenzhen.aliyuncs.com/emsihyo/go.im.client  --port=10000 --host=172.18.93.81:10001 --users=10000 --topics=1000 --per=2 --duration=60
