@@ -4,6 +4,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/mem"
 
 	"runtime/pprof"
@@ -72,10 +73,14 @@ func (mo *Monitor) Monitor(duration time.Duration) *Snapshot {
 }
 
 func (mo *Monitor) cpuMo(duration time.Duration) (percent float64) {
-	// v, _ := cpu.Percent(duration, false)
-	// return v[0]
-	<-time.After(duration)
+	v, err := cpu.Percent(duration, false)
+	if nil == err && len(v) > 0 {
+		return v[0]
+	}
 	return 0
+	// return v[0]
+	// <-time.After(duration)
+	// return 0
 }
 
 func (mo *Monitor) consumerMo() (maximum uint64, total uint64) {
@@ -90,8 +95,8 @@ func (mo *Monitor) consumerMo() (maximum uint64, total uint64) {
 }
 
 func (mo *Monitor) netMo() (in uint64, out uint64) {
-	c, _ := n.IOCounters(false)
-	if len(c) > 0 {
+	c, err := n.IOCounters(false)
+	if nil == err && len(c) > 0 {
 		return c[0].BytesRecv, c[0].BytesSent
 	}
 	return 0, 0
