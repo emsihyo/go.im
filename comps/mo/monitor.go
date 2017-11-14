@@ -74,6 +74,7 @@ func (mo *Monitor) Monitor(duration time.Duration) *Snapshot {
 func (mo *Monitor) cpuMo(duration time.Duration) (percent float64) {
 	// v, _ := cpu.Percent(duration, false)
 	// return v[0]
+	<-time.After(duration)
 	return 0
 }
 
