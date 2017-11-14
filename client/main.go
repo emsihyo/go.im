@@ -27,12 +27,12 @@ func main() {
 	prefix = uuid.NewV5(uuid.NewV4(), prefix).String()
 	portAddrPtr := flag.String("port", "10000", "http port")
 	hostAddrPtr := flag.String("host", ":10001", "tcp addr")
-	usersPtr := flag.Int("users", 5000, "user count")
-	topicsPtr := flag.Int("topics", 250, "topic count")
-	perPtr := flag.Int("per", 20, "topics per user")
-	durationPtr := flag.Int64("duration", 30, "duration in second")
+	usersPtr := flag.Int("users", 10000, "user count")
+	topicsPtr := flag.Int("topics", 1000, "topic count")
+	perPtr := flag.Int("per", 2, "topics per user")
+	durationPtr := flag.Int64("duration", 60, "duration in second")
 	flag.Parse()
-	ch := make(chan struct{}, 4)
+	ch := make(chan struct{}, 10)
 	go func() {
 		for i := 0; i < *usersPtr; i++ {
 			ch <- struct{}{}
@@ -43,14 +43,15 @@ func main() {
 				start := (*perPtr) * slot
 				for i := start; i < start+*perPtr; i++ {
 					cli.Subscribe("room:" + fmt.Sprintln(i))
-					<-time.After(time.Millisecond * 5)
+					<-time.After(time.Millisecond * 10)
 				}
+				<-time.After(time.Second)
 				<-ch
 				go func() {
 					for {
+						<-time.After(time.Duration(int64(time.Second) * *durationPtr))
 						topicID := cli.RandomTopic()
 						cli.Publish(topicID, fmt.Sprintln(time.Now().Unix()))
-						<-time.After(time.Duration(int64(time.Second) * *durationPtr))
 					}
 				}()
 			}()
