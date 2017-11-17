@@ -47,8 +47,11 @@ func main() {
 				<-time.After(time.Millisecond * 200)
 				<-ch
 				go func() {
+					t := time.Duration(int64(time.Second) * *durationPtr)
+					tm := time.NewTimer(t)
 					for {
-						<-time.After(time.Duration(int64(time.Second) * *durationPtr))
+						tm.Reset(t)
+						<-tm.C
 						topicID := cli.RandomTopic()
 						cli.Publish(topicID, fmt.Sprintln(time.Now().Unix()))
 					}
