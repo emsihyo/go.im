@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/emsihyo/go.im/comps/se"
-	"github.com/sirupsen/logrus"
 
 	uuid "github.com/satori/go.uuid"
 
@@ -136,7 +135,6 @@ func (cli *Client) Unsubscribe(topicID string) {
 		cli.preproccess()
 		err := cli.unsubscribe(topicID)
 		if nil != err {
-			logrus.Debug("[UNSUBSCRIBE]", err)
 			cli.reset()
 		} else {
 			return
@@ -208,7 +206,7 @@ func (cli *Client) unsubscribe(topicID string) error {
 		return err
 	}
 	if 0 != resp.Code {
-		err := fmt.Errorf("code:%d, desc:%s", resp.Code, resp.Desc)
+		err = fmt.Errorf("code:%d, desc:%s", resp.Code, resp.Desc)
 		log.Print(err)
 		return err
 	}
