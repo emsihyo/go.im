@@ -52,6 +52,26 @@ func NewMonitor(dataSource DataSource) *Monitor {
 
 //Monitor Monitor
 func (mo *Monitor) Monitor(duration time.Duration) *Snapshot {
+	if nil != mo.dataSource {
+		return mo.dataSourceMonitor(duration)
+	}
+	return mo.defaultMonitor(duration)
+}
+
+func (mo *Monitor) defaultMonitor(duration time.Duration) *Snapshot {
+	snap := Snapshot{}
+	netIn1, netOut1 := mo.netMo()
+	snap.CPUPercent = mo.cpuMo(duration)
+	netIn2, netOut2 := mo.netMo()
+	snap.MemPercent = mo.memMo()
+	snap.AverageNetIn = uint64(float64(netIn2-netIn1) / duration.Seconds())
+	snap.AverageNetOut = uint64(float64(netOut2-netOut1) / duration.Seconds())
+	snap.Goroutine = uint64(runtime.NumGoroutine())
+	snap.Thread = uint64(pprof.Lookup("threadcreate").Count())
+	return &snap
+}
+
+func (mo *Monitor) dataSourceMonitor(duration time.Duration) *Snapshot {
 	snap := Snapshot{}
 	netIn1, netOut1 := mo.netMo()
 	messageIn := mo.dataSource.GetMessageIn()

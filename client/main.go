@@ -6,10 +6,10 @@ import (
 	"log"
 	"net"
 	"net/http"
+	_ "net/http/pprof"
 	"time"
 
-	_ "net/http/pprof"
-
+	"github.com/emsihyo/go.im/comps/mo"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -62,5 +62,19 @@ func main() {
 			}()
 		}
 	}()
-	log.Println(http.ListenAndServe(":"+*portAddrPtr, nil))
+	go func() {
+		http.ListenAndServe(":"+*portAddrPtr, nil)
+	}()
+	monitor := mo.NewMonitor(nil)
+	for {
+		snap := monitor.Monitor(time.Second * 5)
+		log.Printf(`
+CPU:                 %.2f%%
+MEM:                 %.2f%%
+THREAD:              %d
+GOROUTINE:           %d
+NET_IN:              %.2fMB/s
+NET_OUT:             %.2fMB/s
+			`, snap.CPUPercent, snap.MemPercent, snap.Thread, snap.Goroutine, float64(snap.AverageNetIn)/1024.0/1024.0, float64(snap.AverageNetOut)/1024.0/1024.0)
+	}
 }
