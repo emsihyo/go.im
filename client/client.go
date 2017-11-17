@@ -53,7 +53,6 @@ func (cli *Client) preproccess() {
 	for {
 		if false == cli.isConnected {
 			if err := cli.connect(); nil != err {
-				log.Print(err)
 				<-time.After(time.Second * 3)
 				continue
 			} else {
@@ -62,14 +61,12 @@ func (cli *Client) preproccess() {
 		}
 		if false == cli.isLogged {
 			if err := cli.login(); nil != err {
-				log.Print(err)
 				<-time.After(time.Second * 3)
 				continue
 			} else {
 				cli.isLogged = true
 				for _, topicID := range cli.topics {
 					if _, err := cli.subscribe(topicID); nil != err {
-						log.Print(err)
 						cli.reset()
 						break
 					}
