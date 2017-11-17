@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"sync/atomic"
 
 	"github.com/emsihyo/go.im/comps/bi"
@@ -114,7 +113,7 @@ func (serv *Server) init() {
 				if 0 < req.GetMaxCount() {
 					messages, _, err = serv.storage.Fetch(req.GetTopicID(), req.GetMinSID(), req.GetMaxCount())
 					if nil != err {
-						log.Println(err)
+						// log.Println(err)
 						return err
 					}
 					if 0 != len(messages) {
@@ -179,7 +178,7 @@ func (serv *Server) init() {
 		}
 		isNew, err := serv.storage.Store(m)
 		if nil != err {
-			log.Println(err)
+			// log.Println(err)
 			return &pr.RespDeliver{Code: 1, Desc: err.Error()}
 		}
 		if isNew {
@@ -205,13 +204,13 @@ func (serv *Server) broadcast(topicID string, to map[string]*sp.Consumer, from s
 			e := pr.EmitSend{Message: m}
 			a, err := protocol.Marshal(&e)
 			if nil != err {
-				log.Println(err)
+				// log.Println(err)
 				datas[protocol] = []byte{}
 				continue
 			}
 			data, err = protocol.Marshal(&bi.Message{M: pr.Type_Send.String(), T: bi.Message_Emit, A: a})
 			if nil != err {
-				log.Println(err)
+				// log.Println(err)
 				datas[protocol] = []byte{}
 				continue
 			}

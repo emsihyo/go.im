@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"strings"
 	"sync"
@@ -52,7 +51,7 @@ func (cli *Client) preproccess() {
 	for {
 		if false == cli.isConnected {
 			if err := cli.connect(); nil != err {
-				<-time.After(time.Second * 3)
+				<-time.After(time.Second * 5)
 				continue
 			} else {
 				cli.isConnected = true
@@ -60,7 +59,8 @@ func (cli *Client) preproccess() {
 		}
 		if false == cli.isLogged {
 			if err := cli.login(); nil != err {
-				<-time.After(time.Second * 3)
+				cli.reset()
+				<-time.After(time.Second * 5)
 				continue
 			} else {
 				cli.isLogged = true
@@ -82,12 +82,12 @@ func (cli *Client) preproccess() {
 func (cli *Client) connect() error {
 	a, err := net.ResolveTCPAddr("tcp", cli.addr)
 	if nil != err {
-		log.Print(err)
+		// log.Println(err)
 		return err
 	}
 	c, err := net.DialTCP("tcp", nil, a)
 	if nil != err {
-		log.Print(err)
+		// log.Println(err)
 		return err
 	}
 	conn := bi.NewTCPConn(c)
@@ -101,12 +101,12 @@ func (cli *Client) login() error {
 	resp := pr.RespLogin{}
 	err := cli.sess.GetSessionImpl().Request(pr.Type_Login.String(), &pr.ReqLogin{UserID: cli.id, Password: cli.password, Platform: cli.platform}, &resp, time.Hour)
 	if nil != err {
-		log.Print(err)
+		// log.Println(err)
 		return err
 	}
 	if 0 != resp.Code {
 		err = fmt.Errorf("code:%d, desc:%s", resp.Code, resp.Desc)
-		log.Print(err)
+		// log.Println(err)
 		return err
 	}
 	return nil
@@ -180,12 +180,12 @@ func (cli *Client) subscribe(topicID string) ([]*pr.Message, error) {
 	resp := pr.RespSubscribe{}
 	err := cli.sess.GetSessionImpl().Request(pr.Type_Subscribe.String(), &pr.ReqSubscribe{TopicID: topicID, MinSID: sid, MaxCount: 20}, &resp, time.Hour)
 	if nil != err {
-		log.Println(err)
+		// log.Println(err)
 		return nil, err
 	}
 	if 0 != resp.Code {
 		err = fmt.Errorf("code:%d, desc:%s", resp.Code, resp.Desc)
-		log.Println(err)
+		// log.Println(err)
 		return nil, err
 	}
 	cli.topics[topicID] = topicID
@@ -202,12 +202,12 @@ func (cli *Client) unsubscribe(topicID string) error {
 	resp := pr.RespUnsubscribe{}
 	err := cli.sess.GetSessionImpl().Request(pr.Type_Unsubscribe.String(), &pr.ReqUnsubscribe{TopicID: topicID}, &resp, time.Hour)
 	if nil != err {
-		log.Println(err)
+		// log.Println(err)
 		return err
 	}
 	if 0 != resp.Code {
 		err = fmt.Errorf("code:%d, desc:%s", resp.Code, resp.Desc)
-		log.Println(err)
+		// log.Println(err)
 		return err
 	}
 	delete(cli.topics, topicID)
@@ -219,12 +219,12 @@ func (cli *Client) publish(topicID string, body string) error {
 	resp := pr.RespDeliver{}
 	err := cli.sess.GetSessionImpl().Request(pr.Type_Deliver.String(), &pr.ReqDeliver{Message: &message}, &resp, time.Hour)
 	if nil != err {
-		log.Println(err)
+		// log.Println(err)
 		return err
 	}
 	if 0 != resp.Code {
 		err = fmt.Errorf("code:%d, desc:%s", resp.Code, resp.Desc)
-		log.Println(err)
+		// log.Println(err)
 		return err
 	}
 	return nil
@@ -235,7 +235,7 @@ func (cli *Client) ping() (int64, error) {
 	now := time.Now().UnixNano()
 	err := cli.sess.GetSessionImpl().Request(pr.Type_Ping.String(), &pr.ReqPing{}, &resp, time.Hour)
 	if nil != err {
-		log.Println(err)
+		// log.Println(err)
 		return 0, err
 	}
 	delay := (time.Now().UnixNano() - now) / int64(time.Millisecond)
@@ -265,7 +265,10 @@ func (cli *Client) TopicCount() int {
 }
 
 func (cli *Client) reset() {
-	cli.sess.GetSessionImpl().Close()
+	sess := cli.sess
+	if nil != sess {
+		sess.GetSessionImpl().Close()
+	}
 	cli.isConnected = false
 	cli.isLogged = false
 	cli.sess = nil

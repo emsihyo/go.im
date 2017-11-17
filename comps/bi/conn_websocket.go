@@ -1,8 +1,6 @@
 package bi
 
 import (
-	"log"
-
 	"github.com/gorilla/websocket"
 )
 
@@ -40,9 +38,9 @@ func (conn *WebsocketConn) Write(data []byte) error {
 func (conn *WebsocketConn) Read() ([]byte, error) {
 	for {
 		t, data, err := conn.conn.ReadMessage()
-		if nil != err {
-			log.Println(err)
-		}
+		// if nil != err {
+		// 	log.Println(err)
+		// }
 		if biWebsocketMessageType == t {
 			return data, err
 		}

@@ -28,7 +28,7 @@ func main() {
 	hostAddrPtr := flag.String("host", ":10001", "tcp addr")
 	usersPtr := flag.Int("users", 10000, "user count")
 	topicsPtr := flag.Int("topics", 1000, "topic count")
-	perPtr := flag.Int("per", 2, "topics per user")
+	perPtr := flag.Int("per", 1, "topics per user")
 	durationPtr := flag.Int64("duration", 60, "duration in second")
 	flag.Parse()
 	ch := make(chan struct{}, 10)
@@ -62,5 +62,5 @@ func main() {
 			}()
 		}
 	}()
-	log.Print(http.ListenAndServe(":"+*portAddrPtr, nil))
+	log.Println(http.ListenAndServe(":"+*portAddrPtr, nil))
 }

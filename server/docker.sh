@@ -14,5 +14,5 @@ sudo systemctl restart docker
 docker rm -f go.im.server
 docker pull registry.cn-shenzhen.aliyuncs.com/emsihyo/go.im.server
 docker rmi $(docker images -f "dangling=true" -q)
-docker run -d --name go.im.server -p 10001:10001 -p 10002:10002 registry.cn-shenzhen.aliyuncs.com/emsihyo/go.im.server
+docker run -d --name go.im.server -p 10001:10001 -p 10002:10002 --ulimit nofile=1000000:1000000 --ulimit nproc=1000000:1000000 registry.cn-shenzhen.aliyuncs.com/emsihyo/go.im.server
 
