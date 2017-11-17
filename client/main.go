@@ -45,7 +45,7 @@ func main() {
 					cli.Subscribe("room:" + fmt.Sprintln(i))
 					<-time.After(time.Millisecond * 10)
 				}
-				<-time.After(time.Second)
+				<-time.After(time.Millisecond * 200)
 				<-ch
 				go func() {
 					for {
