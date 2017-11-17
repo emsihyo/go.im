@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"strings"
 	"sync"
@@ -82,12 +83,12 @@ func (cli *Client) preproccess() {
 func (cli *Client) connect() error {
 	a, err := net.ResolveTCPAddr("tcp", cli.addr)
 	if nil != err {
-		// log.Println(err)
+		log.Println(err)
 		return err
 	}
 	c, err := net.DialTCP("tcp", nil, a)
 	if nil != err {
-		// log.Println(err)
+		log.Println(err)
 		return err
 	}
 	conn := bi.NewTCPConn(c)
