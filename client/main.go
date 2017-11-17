@@ -11,11 +11,10 @@ import (
 	_ "net/http/pprof"
 
 	uuid "github.com/satori/go.uuid"
-	"github.com/sirupsen/logrus"
 )
 
 func main() {
-	logrus.SetLevel(logrus.ErrorLevel)
+	log.SetFlags(log.Lshortfile | log.LstdFlags)
 	interfaces, err := net.Interfaces()
 	if err != nil {
 		panic("Error:" + err.Error())

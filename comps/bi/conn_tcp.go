@@ -2,6 +2,7 @@ package bi
 
 import (
 	"encoding/binary"
+	"log"
 	"net"
 )
 
@@ -52,6 +53,7 @@ func (conn *TCPConn) read2(data []byte) error {
 			break
 		}
 		if didReadBytes, err = conn.conn.Read(data[didReadBytesTotal:]); nil != err {
+			log.Println(err)
 			break
 		}
 		didReadBytesTotal += didReadBytes
@@ -79,6 +81,7 @@ func (conn *TCPConn) write(data []byte) error {
 	for 0 < len(data) {
 		didWriteBytes, err = conn.conn.Write(data)
 		if nil != err {
+			log.Println(err)
 			break
 		}
 		data = data[didWriteBytes:]

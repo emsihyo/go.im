@@ -2,6 +2,7 @@ package bi
 
 import (
 	"errors"
+	"log"
 	"reflect"
 )
 
@@ -58,6 +59,7 @@ func (c *caller) call(from interface{}, argsProtocol Protocol, a []byte) ([]byte
 	} else {
 		in1 := reflect.New(c.tIn1.Elem()).Interface()
 		if err = argsProtocol.Unmarshal(a, in1); nil != err {
+			log.Println(err)
 			return nil, err
 		}
 		vs = c.Func.Call([]reflect.Value{reflect.ValueOf(from), reflect.ValueOf(in1)})
@@ -65,6 +67,7 @@ func (c *caller) call(from interface{}, argsProtocol Protocol, a []byte) ([]byte
 	if 0 < len(vs) {
 		var b []byte
 		if b, err = argsProtocol.Marshal(vs[0].Interface()); nil != err {
+			log.Println(err)
 			return nil, err
 		}
 		return b, nil

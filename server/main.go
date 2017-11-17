@@ -107,7 +107,7 @@ func handleHTTP(serv *Server, port string, namespace string) {
 			sess := se.NewSession(conn, &pj, time.Minute*2)
 			serv.Handle(sess)
 		} else {
-			log.Print("[WEBSOCKET]:", "upgrade:", err)
+			log.Println("[WEBSOCKET]:", "upgrade:", err)
 		}
 	}
 	http.HandleFunc("/"+namespace, f)

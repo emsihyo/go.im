@@ -157,6 +157,6 @@ func (t *topic) unsubscribe(consumerID string) (consumerCount int) {
 
 func (t *topic) publish(from Session, message interface{}) {
 	t.mut.RLock()
+	defer t.mut.RUnlock()
 	t.broadcast(t.id, t.consumers, from, message)
-	t.mut.RUnlock()
 }

@@ -2,6 +2,7 @@ package bi
 
 import (
 	"errors"
+	"log"
 	"sync"
 	"time"
 
@@ -60,6 +61,7 @@ func (sess *SessionImpl) Emit(method string, args interface{}) error {
 	var err error
 	if nil != args {
 		if a, err = sess.protocol.Marshal(args); nil != err {
+			log.Println(err)
 			return err
 		}
 	}
@@ -79,6 +81,7 @@ func (sess *SessionImpl) Request(method string, args interface{}, resp interface
 	protocol := sess.protocol
 	if nil != args {
 		if a, err = protocol.Marshal(args); nil != err {
+			log.Println(err)
 			return err
 		}
 	}
@@ -96,7 +99,11 @@ func (sess *SessionImpl) Request(method string, args interface{}, resp interface
 	sess.sendMessage(&m)
 	select {
 	case respBytes := <-q:
-		return protocol.Unmarshal(respBytes, resp)
+		err = protocol.Unmarshal(respBytes, resp)
+		if nil != err {
+			log.Println(err)
+		}
+		return err
 	case err = <-disconnection:
 		if nil != err {
 			return err
@@ -143,6 +150,7 @@ func (sess *SessionImpl) handle(b *BI, extension interface{}) {
 			m := Message{}
 			err = sess.protocol.Unmarshal(data, &m)
 			if nil != err {
+				log.Println(err)
 				sess.didReceiveError <- err
 				break
 			} else {
@@ -195,6 +203,7 @@ loop2:
 func (sess *SessionImpl) sendMessage(m *Message) {
 	marshalledData, err := sess.protocol.Marshal(m)
 	if nil != err {
+		log.Println(err)
 		return
 	}
 	sess.sendMarshalledData <- marshalledData
