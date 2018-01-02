@@ -94,7 +94,7 @@ func (sess *SessionImpl) Request(method string, args interface{}, resp interface
 	q := make(chan []byte, 1)
 	qa.addQ(m.I, q)
 	defer qa.removeQ(m.I)
-	disconnection := sess.waitForDisconnection()
+	waitForDisconnection := sess.waitForDisconnection()
 	sess.sendMessage(&m)
 	select {
 	case respBytes := <-q:
@@ -103,7 +103,7 @@ func (sess *SessionImpl) Request(method string, args interface{}, resp interface
 		// 	log.Println(err)
 		// }
 		return err
-	case err = <-disconnection:
+	case err = <-waitForDisconnection:
 		if nil != err {
 			return err
 		}
@@ -121,20 +121,9 @@ func (sess *SessionImpl) SendMarshalledData(marshalledData []byte) {
 func (sess *SessionImpl) handle(b *BI, extension interface{}) {
 	sess.b = b
 	sess.extension = extension
-	sess.b.onEmit(sess.extension, Connection, sess.protocol, nil)
+	sess.b.onRequest(sess.extension, Connection, sess.protocol, nil)
 	waitForDisconnection := sess.waitForDisconnection()
-	go func() {
-	loop1:
-		for {
-			select {
-			case <-waitForDisconnection:
-				break loop1
-			case data := <-sess.sendMarshalledData:
-				sess.conn.Write(data)
-			}
-
-		}
-	}()
+	//receive
 	go func() {
 		var err error
 		var data []byte
@@ -144,6 +133,7 @@ func (sess *SessionImpl) handle(b *BI, extension interface{}) {
 				break
 			}
 			if nil == data {
+				sess.didReceiveMessage <- nil
 				continue
 			}
 			m := Message{}
@@ -157,20 +147,36 @@ func (sess *SessionImpl) handle(b *BI, extension interface{}) {
 			}
 		}
 	}()
+
+	go func() {
+		//send loop
+	loop1:
+		for {
+			select {
+			case <-waitForDisconnection:
+				break loop1
+			case data := <-sess.sendMarshalledData:
+				sess.conn.Write(data)
+			}
+		}
+	}()
+
+	//receive loop
 	var err error
-	var ignore bool
+	var didTimeout bool
 loop2:
 	for {
 		sess.timer.Reset(sess.timeout)
 		select {
 		case <-sess.timer.C:
-			ignore = true
+			//timeout
+			didTimeout = true
 			sess.conn.Close()
 		case m := <-sess.didReceiveMessage:
-			if true != ignore {
+			if true != didTimeout {
 				switch m.T {
 				case Message_Emit:
-					sess.b.onEmit(sess.extension, m.M, sess.protocol, m.A)
+					sess.b.onRequest(sess.extension, m.M, sess.protocol, m.A)
 				case Message_Request:
 					resp, _ := sess.b.onRequest(sess.extension, m.M, sess.protocol, m.A)
 					m.T = Message_Response
@@ -196,7 +202,7 @@ loop2:
 	for _, didDisconnect := range sess.didDisconnects {
 		didDisconnect <- err
 	}
-	sess.b.onEmit(sess.extension, Disconnection, sess.protocol, nil)
+	sess.b.onRequest(sess.extension, Disconnection, sess.protocol, nil)
 }
 
 func (sess *SessionImpl) sendMessage(m *Message) {

@@ -11,7 +11,7 @@ const (
 
 //caller caller
 type caller struct {
-	Func  reflect.Value
+	fun   reflect.Value
 	tIn0  reflect.Type
 	tIn1  reflect.Type
 	tOut0 reflect.Type
@@ -23,7 +23,7 @@ func newCaller(v interface{}) *caller {
 	if vv.Kind() != reflect.Func {
 		panic(errors.New(callerHelp))
 	}
-	c.Func = vv
+	c.fun = vv
 	vt := vv.Type()
 	switch vt.NumIn() {
 	case 2:
@@ -34,6 +34,9 @@ func newCaller(v interface{}) *caller {
 		fallthrough
 	case 1:
 		c.tIn0 = vt.In(0)
+		if c.tIn0.Kind() != reflect.Ptr {
+			panic(errors.New(callerHelp))
+		}
 	default:
 		panic(errors.New(callerHelp))
 	}
@@ -50,22 +53,22 @@ func newCaller(v interface{}) *caller {
 	return c
 }
 
-func (c *caller) call(from interface{}, argsProtocol Protocol, a []byte) ([]byte, error) {
+func (c *caller) call(from interface{}, p Protocol, a []byte) ([]byte, error) {
 	var vs []reflect.Value
 	var err error
 	if nil == c.tIn1 {
-		vs = c.Func.Call([]reflect.Value{(reflect.ValueOf(from))})
+		vs = c.fun.Call([]reflect.Value{(reflect.ValueOf(from))})
 	} else {
 		in1 := reflect.New(c.tIn1.Elem()).Interface()
-		if err = argsProtocol.Unmarshal(a, in1); nil != err {
+		if err = p.Unmarshal(a, in1); nil != err {
 			// log.Println(err)
 			return nil, err
 		}
-		vs = c.Func.Call([]reflect.Value{reflect.ValueOf(from), reflect.ValueOf(in1)})
+		vs = c.fun.Call([]reflect.Value{reflect.ValueOf(from), reflect.ValueOf(in1)})
 	}
 	if 0 < len(vs) {
 		var b []byte
-		if b, err = argsProtocol.Marshal(vs[0].Interface()); nil != err {
+		if b, err = p.Marshal(vs[0].Interface()); nil != err {
 			// log.Println(err)
 			return nil, err
 		}
